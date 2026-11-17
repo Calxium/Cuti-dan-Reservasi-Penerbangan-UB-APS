@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Komparasi Preferensi Penerbangan (US-09) — APS Portal{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Bandingkan Penerbangan Berdasarkan Preferensi</h1>
+      <p style="color: #64748b;">US-09: Filter berdasarkan jam keberangkatan dan bandingkan minimal dua opsi penerbangan secara berdampingan.</p>
+    </div>
+    <span class="badge badge-success">Peran: Member Frequent Traveller</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Filter Preferensi Jam Keberangkatan</div>
+    <div class="card-description">Pilih rentang waktu (Pagi, Siang, Malam) untuk menyaring jadwal terbang yang diinginkan.</div>
+  </div>
+  <div class="card-content">
+    <form method="GET" action="{{ url_for('flight.compare_preferences_view') }}">
+      <div class="grid-4">
+        <div class="form-group">
+          <label class="form-label">Kota Asal *</label>
+          <select name="origin_id" class="form-control" required>
+            <option value="">-- Pilih Asal --</option>
+            {% for loc in locations %}
+              <option value="{{ loc.id }}" {% if loc.id == origin_id %}selected{% endif %}>{{ loc.nama_kota }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kota Tujuan *</label>
+          <select name="dest_id" class="form-control" required>
+            <option value="">-- Pilih Tujuan --</option>
+            {% for loc in locations %}
+              <option value="{{ loc.id }}" {% if loc.id == dest_id %}selected{% endif %}>{{ loc.nama_kota }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tanggal Perjalanan *</label>
+          <input type="date" name="travel_date" class="form-control" value="{{ travel_date_str }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Preferensi Waktu Terbang (AC-01)</label>
+          <select name="time_bucket" class="form-control">
+            <option value="all" {% if time_bucket == 'all' %}selected{% endif %}>Semua Waktu (24 Jam)</option>
+            <option value="pagi" {% if time_bucket == 'pagi' %}selected{% endif %}>Pagi (00:00 - 11:59)</option>
+            <option value="siang" {% if time_bucket == 'siang' %}selected{% endif %}>Siang / Sore (12:00 - 17:59)</option>
+            <option value="malam" {% if time_bucket == 'malam' %}selected{% endif %}>Malam (18:00 - 23:59)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary">Terapkan Filter Preferensi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Hasil Tabel Perbandingan Side-by-Side jika ada penerbangan yang dipilih -->
+{% if selected_compare_flights %}
+  <div class="card" style="border: 2px solid #0284c7;">
+    <div class="card-header" style="background-color: #f0f9ff; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <div class="card-title" style="color: #0369a1;">Hasil Komparasi Berdampingan ({{ selected_compare_flights | length }} Tiket)</div>
+        <div class="card-description">Perbandingan detail jadwal, durasi, dan harga untuk membantu keputusan terbaik.</div>
+      </div>
+      <a href="{{ url_for('flight.compare_preferences_view', origin_id=origin_id, dest_id=dest_id, travel_date=travel_date_str, time_bucket=time_bucket) }}" class="btn btn-outline" style="font-size: 0.75rem;">
+        Tutup Komparasi
+      </a>
+    </div>
+    <div class="card-content">
+      <div class="table-responsive">
+        <table class="table" style="text-align: center;">
+          <thead>
+            <tr>
+              <th style="text-align: left; width: 180px;">Parameter</th>
+              {% for f in selected_compare_flights %}
+                <th style="text-align: center;">Opsi {{ loop.index }}: {{ f.maskapai.nama }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Nomor Penerbangan</td>
+              {% for f in selected_compare_flights %}
+                <td><code>{{ f.nomor_penerbangan }}</code></td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Jam Keberangkatan</td>
+              {% for f in selected_compare_flights %}
+                <td><strong style="font-size: 1.1rem; color: #0284c7;">{{ f.jadwal_keberangkatan.strftime('%H:%M') }}</strong></td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Jam Kedatangan</td>
+              {% for f in selected_compare_flights %}
+                <td><strong>{{ f.jadwal_kedatangan.strftime('%H:%M') }}</strong></td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Durasi Terbang</td>
+              {% for f in selected_compare_flights %}
+                <td>{{ f.durasi_format }}</td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Harga Tiket</td>
+              {% for f in selected_compare_flights %}
+                <td><strong style="font-size: 1.15rem; color: #ea580c;">{{ f.harga_tiket | currency }}</strong></td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td style="text-align: left; font-weight: 600;">Aksi Pemesanan</td>
+              {% for f in selected_compare_flights %}
+                <td>
+                  <a href="{{ url_for('flight.book_flight_view', flight_id=f.id) }}" class="btn btn-primary" style="font-size: 0.8rem;">
+                    Pilih Tiket Ini
+                  </a>
+                </td>
+              {% endfor %}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- Daftar Opsi Penerbangan yang Memenuhi Kriteria (AC-02 & AC-03 Checkbox) -->
+{% if has_searched and not error_msg %}
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Pilihan Penerbangan Sesuai Preferensi Jam ({{ flights | length }})</div>
+      <div class="card-description">Centang minimal 2 opsi penerbangan lalu tekan "Bandingkan Opsi Terpilih" (AC-03).</div>
+    </div>
+    <div class="card-content">
+      {% if flights %}
+        <form method="POST" action="{{ url_for('flight.compare_preferences_view', origin_id=origin_id, dest_id=dest_id, travel_date=travel_date_str, time_bucket=time_bucket) }}">
+          <div style="margin-bottom: 1rem; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">Bandingkan Opsi Terpilih (Minimal 2)</button>
+          </div>
+
+          {% for f in flights %}
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.75rem; background: #ffffff;">
+              <input type="checkbox" name="compare_flight_ids" value="{{ f.id }}" style="width: 18px; height: 18px;" {% if f in selected_compare_flights %}checked{% endif %}>
+              <div style="flex: 1; display: grid; grid-template-columns: 180px 1fr 150px; align-items: center;">
+                <div>
+                  <strong>{{ f.maskapai.nama }}</strong>
+                  <div style="font-size: 0.8rem; color: #64748b;">{{ f.nomor_penerbangan }}</div>
+                </div>
+                <div>
+                  <strong>{{ f.jadwal_keberangkatan.strftime('%H:%M') }}</strong> ({{ f.asal.kode_bandara }}) ➔
+                  <strong>{{ f.jadwal_kedatangan.strftime('%H:%M') }}</strong> ({{ f.tujuan.kode_bandara }})
+                  <div style="font-size: 0.75rem; color: #64748b;">Durasi: {{ f.durasi_format }}</div>
+                </div>
+                <div style="text-align: right;">
+                  <strong style="color: #ea580c; font-size: 1.1rem;">{{ f.harga_tiket | currency }}</strong>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </form>
+      {% else %}
+        <!-- US-09 AC-04: Pesan jika tidak ada penerbangan sesuai preferensi -->
+        <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+          <p style="font-weight: 600; font-size: 1rem; color: #0f172a;">Tidak ada penerbangan yang sesuai kriteria preferensi.</p>
+          <p style="font-size: 0.85rem; margin-top: 0.25rem;">Coba pilih rentang jam lain atau ubah tanggal perjalanan.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

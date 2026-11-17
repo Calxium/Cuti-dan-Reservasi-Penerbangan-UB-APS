@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Pemeriksaan Kode Booking (US-14) — Manajer Travel{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Pelacakan Kode Booking Reference</h1>
+      <p style="color: #64748b;">US-14: Memeriksa status dan rincian pemesanan berdasarkan kode booking dengan otorisasi akses.</p>
+    </div>
+    <span class="badge badge-warning">Peran: Manajer Travel</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Cari Pemesanan via Kode Booking</div>
+    <div class="card-description">Masukkan kode booking referensi (contoh: BK-2026-XXXX atau BK-XXXXXXXX) (AC-01, AC-04).</div>
+  </div>
+  <div class="card-content">
+    <form method="GET" action="{{ url_for('flight.manager_lookup_view') }}">
+      <div style="display: flex; gap: 0.75rem; max-width: 500px;">
+        <input type="text" name="code" class="form-control" placeholder="Contoh: BK-ABC12345" value="{{ code_input }}" required style="font-weight: 600; text-transform: uppercase;">
+        <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Periksa Status</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Hasil Pencarian Kode Booking (AC-02, AC-03, AC-05) -->
+{% if has_searched %}
+  {% if booking %}
+    <!-- AC-02: Kode ditemukan dan memiliki hak akses -->
+    <div class="card" style="border: 2px solid #0284c7;">
+      <div class="card-header" style="background: #f0f9ff; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div class="card-title" style="color: #0369a1;">Pemesanan Ditemukan: {{ booking.kode_booking_reference }}</div>
+          <div class="card-description">Hak akses terverifikasi (AUTHORIZED_TRAVEL_MANAGER).</div>
+        </div>
+        <div>
+          {% if booking.status == 'Confirmed' %}
+            <span class="badge badge-success" style="font-size: 0.9rem;">Status: Confirmed</span>
+          {% elif booking.status == 'Booked' %}
+            <span class="badge badge-info" style="font-size: 0.9rem;">Status: Booked</span>
+          {% elif booking.status == 'Waiting for Payment' %}
+            <span class="badge badge-warning" style="font-size: 0.9rem;">Status: Waiting for Payment</span>
+          {% elif booking.status == 'Dibatalkan' %}
+            <span class="badge badge-danger" style="font-size: 0.9rem;">Status: Dibatalkan</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="grid-2">
+          <div>
+            <div style="font-size: 0.8rem; color: #64748b;">Detail Penerbangan:</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-top: 0.25rem;">
+              {{ booking.penerbangan.nomor_penerbangan }} — {{ booking.penerbangan.maskapai.nama }}
+            </div>
+            <div style="font-size: 0.9rem; margin-top: 0.25rem;">
+              Rute: <strong>{{ booking.penerbangan.asal.nama_kota }} ({{ booking.penerbangan.asal.kode_bandara }})</strong> ➔ 
+              <strong>{{ booking.penerbangan.tujuan.nama_kota }} ({{ booking.penerbangan.tujuan.kode_bandara }})</strong>
+            </div>
+            <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem;">
+              Jadwal: {{ booking.penerbangan.jadwal_keberangkatan | format_datetime }}
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.8rem; color: #64748b;">Identitas Penumpang:</div>
+            <div style="font-size: 1.05rem; font-weight: 600; color: #0f172a; margin-top: 0.25rem;">
+              {{ booking.penumpang.nama_lengkap if booking.penumpang else 'Umum' }}
+            </div>
+            <div style="font-size: 0.85rem; color: #334155;">
+              No. Identitas: {{ booking.penumpang.nomor_identitas if booking.penumpang else '-' }} ({{ booking.penumpang.tipe_identitas }})
+            </div>
+            <div style="font-size: 0.85rem; color: #334155;">
+              Email: {{ booking.penumpang.email if booking.penumpang else '-' }}
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+          <a href="{{ url_for('flight.booking_detail_view', booking_id=booking.id) }}" class="btn btn-outline">
+            Lihat Halaman Lengkap Pemesanan
+          </a>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <!-- AC-03 & AC-05: Pesan penolakan tanpa membuka detail -->
+    <div class="card">
+      <div class="card-content" style="text-align: center; padding: 2.5rem 1rem;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.75rem; color: #ef4444;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        <p style="font-weight: 700; font-size: 1.05rem; color: #b91c1c;">Kode booking reference tidak sesuai.</p>
+        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.25rem;">
+          {{ error_msg or 'Pastikan kode booking yang dimasukkan tepat atau Anda memiliki wewenang akses yang sah.' }}
+        </p>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

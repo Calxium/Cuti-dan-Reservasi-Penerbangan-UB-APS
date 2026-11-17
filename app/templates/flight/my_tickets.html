@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}E-Tiket Saya (US-13) — Akun Pengunjung{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">E-Tiket & Pemesanan Saya</h1>
+      <p style="color: #64748b;">US-13: Mengakses tiket elektronik yang diterbitkan pada akun pengunjung terdaftar.</p>
+    </div>
+    <span class="badge badge-primary">Peran: Pengunjung ({{ visitor.nama if visitor else 'Umum' }})</span>
+  </div>
+</div>
+
+{% if visitor %}
+  <div class="card" style="margin-bottom: 1.5rem; background: #f8fafc;">
+    <div class="card-content" style="padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <div style="font-size: 0.8rem; color: #64748b;">Akun Pengunjung Aktif (AC-01):</div>
+        <div style="font-weight: 700; font-size: 1.05rem; color: #0f172a;">{{ visitor.nama }} (<code>{{ visitor.username }}</code>)</div>
+      </div>
+      <div style="font-size: 0.85rem; color: #64748b;">
+        Email Terdaftar: <strong>{{ visitor.email_terdaftar }}</strong>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Daftar Pemesanan & E-Tiket Saya</div>
+    <div class="card-description">Hanya pemesanan yang terikat dengan akun Anda yang ditampilkan di sini (AC-01).</div>
+  </div>
+  <div class="card-content">
+    {% if bookings %}
+      {% for b in bookings %}
+        <div style="border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; background: #ffffff;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+            <div>
+              <span style="font-size: 0.8rem; color: #64748b;">Kode Pemesanan:</span>
+              <strong style="font-size: 1.1rem; color: #0284c7; margin-left: 0.25rem;">{{ b.kode_booking_reference }}</strong>
+            </div>
+            <div>
+              {% if b.status == 'Confirmed' %}
+                <span class="badge badge-success">Confirmed</span>
+              {% elif b.status == 'Booked' %}
+                <span class="badge badge-info">Booked</span>
+              {% elif b.status == 'Waiting for Payment' %}
+                <span class="badge badge-warning">Waiting for Payment</span>
+              {% elif b.status == 'Dibatalkan' %}
+                <span class="badge badge-danger">Dibatalkan</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 200px 1fr 220px; align-items: center; gap: 1rem;">
+            <div>
+              <strong style="color: #0f172a;">{{ b.penerbangan.nomor_penerbangan }}</strong>
+              <div style="font-size: 0.85rem; color: #64748b;">{{ b.penerbangan.maskapai.nama }}</div>
+              <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">Penumpang: <strong>{{ b.penumpang.nama_lengkap }}</strong></div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem;">{{ b.penerbangan.jadwal_keberangkatan.strftime('%H:%M') }}</div>
+                <div style="font-size: 0.8rem;">{{ b.penerbangan.asal.nama_kota }} ({{ b.penerbangan.asal.kode_bandara }})</div>
+                <div style="font-size: 0.75rem; color: #64748b;">{{ b.penerbangan.jadwal_keberangkatan | format_date }}</div>
+              </div>
+              <div style="color: #0284c7; font-size: 0.8rem; font-weight: 600;">➔ {{ b.penerbangan.durasi_format }} ➔</div>
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem;">{{ b.penerbangan.jadwal_kedatangan.strftime('%H:%M') }}</div>
+                <div style="font-size: 0.8rem;">{{ b.penerbangan.tujuan.nama_kota }} ({{ b.penerbangan.tujuan.kode_bandara }})</div>
+                <div style="font-size: 0.75rem; color: #64748b;">{{ b.penerbangan.jadwal_kedatangan | format_date }}</div>
+              </div>
+            </div>
+
+            <!-- E-Tiket Status Panel (AC-02, AC-03, AC-04) -->
+            <div style="text-align: right; border-left: 1px solid var(--border); padding-left: 1rem;">
+              {% if b.e_tiket and b.e_tiket.status_penerbitan == 'Diterbitkan' %}
+                <!-- AC-02: Tiket Diterbitkan -->
+                <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 0.5rem; text-align: center; margin-bottom: 0.5rem;">
+                  <div style="font-size: 0.7rem; color: #065f46; font-weight: 600;">E-TIKET DITERBITKAN</div>
+                  <div style="font-size: 0.8rem; font-weight: 700; color: #047857;">{{ b.e_tiket.nomor_tiket }}</div>
+                  <div style="font-size: 0.65rem; color: #059669;">Terkirim ke {{ b.penumpang.email }}</div>
+                </div>
+                <a href="{{ url_for('main.mailbox') }}" class="btn btn-outline" style="font-size: 0.75rem; width: 100%;">
+                  Lihat Notifikasi Email (AC-03)
+                </a>
+              {% else %}
+                <!-- AC-04: E-Tiket Belum Tersedia -->
+                <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem; text-align: center;">
+                  <div style="font-size: 0.75rem; color: #64748b; font-weight: 500;">E-Tiket Belum Tersedia</div>
+                  <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem;">Menunggu konfirmasi / pembayaran</div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+        <p style="font-weight: 600; font-size: 1rem;">Tidak ada riwayat pemesanan untuk akun ini.</p>
+        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Pesan tiket baru untuk melihat penerbitan e-tiket pada akun Anda.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

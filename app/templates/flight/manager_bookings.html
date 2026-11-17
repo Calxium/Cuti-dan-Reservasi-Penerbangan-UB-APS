@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Monitoring Status Pemesanan Tiket (US-10) — Manajer Travel{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Monitoring Pemesanan Tiket Keseluruhan</h1>
+      <p style="color: #64748b;">US-10: Memantau dan memfilter status seluruh pemesanan tiket pada travel agency.</p>
+    </div>
+    <span class="badge badge-warning">Peran: Manajer Travel</span>
+  </div>
+</div>
+
+<!-- June Dashboard Pattern: Filter status tabs di atas tabel -->
+<div class="card" style="margin-bottom: 1.5rem;">
+  <div class="card-content" style="padding: 1rem 1.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-right: 0.5rem;">Filter Status (AC-02):</span>
+        <a href="{{ url_for('flight.manager_bookings_view') }}" class="btn {% if current_status_filter == 'ALL' %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+          Semua Status (Reset AC-04)
+        </a>
+        <a href="{{ url_for('flight.manager_bookings_view', status='Confirmed') }}" class="btn {% if current_status_filter == 'Confirmed' %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+          Confirmed
+        </a>
+        <a href="{{ url_for('flight.manager_bookings_view', status='Booked') }}" class="btn {% if current_status_filter == 'Booked' %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+          Booked
+        </a>
+        <a href="{{ url_for('flight.manager_bookings_view', status='Waiting for Payment') }}" class="btn {% if current_status_filter == 'Waiting for Payment' %}btn-primary{% else %}btn-outline{% endif %}" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+          Waiting for Payment
+        </a>
+      </div>
+
+      <a href="{{ url_for('flight.manager_lookup_view') }}" class="btn btn-outline" style="font-size: 0.8rem;">
+        🔍 Cari Kode Booking (US-14)
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Daftar Pemesanan (Filter: {{ current_status_filter }})</div>
+    <div class="card-description">Menampilkan pemesanan tiket aktif yang berada di bawah wewenang keagenan.</div>
+  </div>
+  <div class="card-content">
+    {% if bookings %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Kode Booking</th>
+              <th>Penerbangan</th>
+              <th>Rute</th>
+              <th>Nama Penumpang</th>
+              <th>Waktu Pemesanan</th>
+              <th>Status</th>
+              <th>E-Tiket</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+              <tr>
+                <td><strong style="color: #0284c7;">{{ b.kode_booking_reference }}</strong></td>
+                <td>
+                  <strong>{{ b.penerbangan.nomor_penerbangan }}</strong>
+                  <div style="font-size: 0.75rem; color: #64748b;">{{ b.penerbangan.maskapai.nama }}</div>
+                </td>
+                <td>
+                  {{ b.penerbangan.asal.kode_bandara }} ➔ {{ b.penerbangan.tujuan.kode_bandara }}
+                  <div style="font-size: 0.75rem; color: #64748b;">{{ b.penerbangan.jadwal_keberangkatan | format_date }}</div>
+                </td>
+                <td>
+                  {{ b.penumpang.nama_lengkap if b.penumpang else 'Umum' }}
+                  {% if b.akun_pengunjung %}
+                    <span class="badge badge-secondary" style="font-size: 0.7rem;">Akun: {{ b.akun_pengunjung.username }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ b.tanggal_pemesanan | format_datetime }}</td>
+                <td>
+                  {% if b.status == 'Confirmed' %}
+                    <span class="badge badge-success">Confirmed</span>
+                  {% elif b.status == 'Booked' %}
+                    <span class="badge badge-info">Booked</span>
+                  {% elif b.status == 'Waiting for Payment' %}
+                    <span class="badge badge-warning">Waiting for Payment</span>
+                  {% elif b.status == 'Dibatalkan' %}
+                    <span class="badge badge-danger">Dibatalkan</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if b.e_tiket and b.e_tiket.status_penerbitan == 'Diterbitkan' %}
+                    <span class="badge badge-success" title="{{ b.e_tiket.nomor_tiket }}">Diterbitkan</span>
+                  {% else %}
+                    <span class="badge badge-secondary">Belum Terbit</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('flight.booking_detail_view', booking_id=b.id) }}" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                    Detail
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <!-- US-10 AC-05: Pesan jika tidak ada pemesanan dengan status yang dipilih -->
+      <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.75rem; color: #94a3b8;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <p style="font-weight: 600; font-size: 1rem; color: #0f172a;">Tidak ada pemesanan dengan status {{ current_status_filter }}.</p>
+        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Klik tombol "Semua Status" untuk mereset dan melihat seluruh data pemesanan.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

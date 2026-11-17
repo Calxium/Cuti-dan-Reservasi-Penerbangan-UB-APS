@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Pencarian Multi-Tujuan Alternatif (US-06) — Reservasi Penerbangan{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Pencarian Multi-Tujuan Alternatif</h1>
+      <p style="color: #64748b;">US-06: Mencari penerbangan ke minimal dua kota tujuan alternatif sekaligus dari satu titik keberangkatan.</p>
+    </div>
+    <span class="badge badge-secondary">Peran: Calon Penumpang</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Formulir Pencarian Multi-Tujuan</div>
+    <div class="card-description">Pilih satu kota asal, satu tanggal keberangkatan, dan centang minimal 2 kota tujuan alternatif (AC-01).</div>
+  </div>
+  <div class="card-content">
+    <form method="GET" action="{{ url_for('flight.search_multi_dest_view') }}">
+      <div class="grid-2" style="margin-bottom: 1.25rem;">
+        <div class="form-group">
+          <label class="form-label">Kota Keberangkatan (Asal) *</label>
+          <select name="origin_id" class="form-control" required>
+            <option value="">-- Pilih Kota Asal --</option>
+            {% for loc in locations %}
+              <option value="{{ loc.id }}" {% if loc.id == origin_id %}selected{% endif %}>
+                {{ loc.nama_kota }} ({{ loc.kode_bandara }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tanggal Perjalanan *</label>
+          <input type="date" name="travel_date" class="form-control" value="{{ travel_date_str }}" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Pilih Kota Tujuan Alternatif (Minimal 2 Kota) *</label>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; background: #f8fafc; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border);">
+          {% for loc in locations %}
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+              <input type="checkbox" name="dest_ids" value="{{ loc.id }}" {% if loc.id in selected_dest_ids %}checked{% endif %}>
+              <span>{{ loc.nama_kota }} ({{ loc.kode_bandara }})</span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
+        <a href="{{ url_for('flight.search_multi_dest_view') }}" class="btn btn-outline">Reset Form</a>
+        <button type="submit" class="btn btn-primary">Bandingkan Tujuan Alternatif</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if has_searched and not error_msg %}
+  <div style="margin-bottom: 1rem;">
+    <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a;">Hasil Pencarian per Kota Tujuan</h2>
+  </div>
+
+  {% for dest_id, data in results.items() %}
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div class="card-header" style="background-color: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div class="card-title" style="font-size: 1rem;">Tujuan: {{ data.destination.nama_kota }} ({{ data.destination.kode_bandara }})</div>
+          <div class="card-description">{{ data.destination.nama_bandara }}</div>
+        </div>
+        <div>
+          {% if data.has_flights %}
+            <span class="badge badge-success">{{ data.flights | length }} Jadwal Ditemukan</span>
+          {% else %}
+            <span class="badge badge-warning">0 Penerbangan</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-content" style="padding: 1rem 1.5rem;">
+        {% if data.has_flights %}
+          {% for f in data.flights %}
+            <div class="flight-card" style="margin-bottom: 0.75rem;">
+              <div class="airline-col">
+                <span class="airline-name">{{ f.maskapai.nama }}</span>
+                <span class="flight-number">{{ f.nomor_penerbangan }}</span>
+              </div>
+              <div class="schedule-col">
+                <div class="time-box">
+                  <div class="flight-time">{{ f.jadwal_keberangkatan.strftime('%H:%M') }}</div>
+                  <div class="airport-code">{{ f.asal.kode_bandara }}</div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                  <span class="flight-duration">{{ f.durasi_format }}</span>
+                  <span style="font-size: 0.7rem; color: #16a34a;">Langsung</span>
+                </div>
+                <div class="time-box">
+                  <div class="flight-time">{{ f.jadwal_kedatangan.strftime('%H:%M') }}</div>
+                  <div class="airport-code">{{ f.tujuan.kode_bandara }}</div>
+                </div>
+              </div>
+              <div class="price-col">
+                <div class="price-amount">{{ f.harga_tiket | currency }}</div>
+              </div>
+              <div class="action-col">
+                <a href="{{ url_for('flight.book_flight_view', flight_id=f.id) }}" class="btn btn-primary" style="font-size: 0.8rem;">
+                  Pesan Tiket
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <!-- US-06 AC-04: Informasi jika tidak terdapat penerbangan ke salah satu tujuan -->
+          <div style="text-align: center; padding: 1.5rem; color: #64748b;">
+            <p style="font-weight: 500; color: #b45309;">Tidak terdapat penerbangan ke {{ data.destination.nama_kota }} pada tanggal ini.</p>
+            <p style="font-size: 0.8rem; margin-top: 0.25rem;">Silakan periksa tanggal alternatif atau pilih destinasi lainnya.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+{% endif %}
+{% endblock %}

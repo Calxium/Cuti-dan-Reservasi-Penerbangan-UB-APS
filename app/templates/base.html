@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}QUIZ 2 APS — Manajemen Cuti & Reservasi Penerbangan{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <a href="{{ url_for('main.index') }}" class="sidebar-brand">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <span>APS Portal</span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('main.index') }}" class="nav-item">
+        <span>Beranda</span>
+      </a>
+
+      <!-- Modul 1: Cuti Pegawai -->
+      <div class="nav-section-title">Manajemen Cuti</div>
+      <a href="{{ url_for('leave.filter_leaves_view') }}" class="nav-item">
+        <span>Filter Pengajuan Cuti</span>
+        <span class="badge-us">US-01</span>
+      </a>
+      <a href="{{ url_for('leave.employee_list_view') }}" class="nav-item">
+        <span>Riwayat & Kuota Pegawai</span>
+        <span class="badge-us">US-02</span>
+      </a>
+
+      <!-- Modul 2: Reservasi Penerbangan -->
+      <div class="nav-section-title">Reservasi Penerbangan</div>
+      <a href="{{ url_for('flight.search_single_view') }}" class="nav-item">
+        <span>Cari 1 Tujuan & Pesan</span>
+        <span class="badge-us">US-03/04</span>
+      </a>
+      <a href="{{ url_for('flight.search_multi_dest_view') }}" class="nav-item">
+        <span>Cari Multi-Tujuan Alternatif</span>
+        <span class="badge-us">US-06</span>
+      </a>
+      <a href="{{ url_for('flight.itinerary_search_view') }}" class="nav-item">
+        <span>Itinerary Multi-Destinasi</span>
+        <span class="badge-us">US-07</span>
+      </a>
+      <a href="{{ url_for('flight.member_profile_view') }}" class="nav-item">
+        <span>Profil Member & Validasi</span>
+        <span class="badge-us">US-08</span>
+      </a>
+      <a href="{{ url_for('flight.compare_preferences_view') }}" class="nav-item">
+        <span>Komparasi Preferensi</span>
+        <span class="badge-us">US-09</span>
+      </a>
+
+      <!-- Travel Manager -->
+      <div class="nav-section-title">Travel Manager & Agen</div>
+      <a href="{{ url_for('flight.manager_bookings_view') }}" class="nav-item">
+        <span>Monitoring Seluruh Booking</span>
+        <span class="badge-us">US-10</span>
+      </a>
+      <a href="{{ url_for('flight.visitor_search_view') }}" class="nav-item">
+        <span>Pesan Tiket Pengunjung</span>
+        <span class="badge-us">US-11/12</span>
+      </a>
+      <a href="{{ url_for('flight.manager_lookup_view') }}" class="nav-item">
+        <span>Lacak Kode Booking</span>
+        <span class="badge-us">US-14</span>
+      </a>
+
+      <!-- Akun Pengunjung & Tiket -->
+      <div class="nav-section-title">Penumpang & E-Tiket</div>
+      <a href="{{ url_for('flight.my_tickets_view') }}" class="nav-item">
+        <span>E-Tiket Saya</span>
+        <span class="badge-us">US-13</span>
+      </a>
+      <a href="{{ url_for('main.mailbox') }}" class="nav-item">
+        <span>Simulated Mailbox</span>
+        <span class="badge-us">{{ unread_emails_count }}</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main View -->
+  <main class="app-main">
+    <!-- Topbar -->
+    <header class="app-topbar">
+      <div class="role-switcher-container">
+        <span class="role-badge-label">Peran Aktif:</span>
+        <select class="role-dropdown" onchange="window.location.href='/switch-role/' + encodeURIComponent(this.value)">
+          {% for role in demo_roles %}
+            <option value="{{ role }}" {% if current_role == role %}selected{% endif %}>
+              {{ role }}
+            </option>
+          {% endfor %}
+        </select>
+        <span class="badge badge-info">{{ current_role }}</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="{{ url_for('main.mailbox') }}" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+          Simulasi Email Inbox ({{ unread_emails_count }})
+        </a>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-wrapper">
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'error' if category == 'error' else (category if category in ['success', 'warning', 'info'] else 'info') }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

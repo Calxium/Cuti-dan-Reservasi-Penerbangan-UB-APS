@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Detail Pemesanan {{ booking.kode_booking_reference }} — APS Portal{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Detail Pemesanan Tiket</h1>
+      <p style="color: #64748b;">Kode Booking Reference: <strong style="color: #0284c7;">{{ booking.kode_booking_reference }}</strong></p>
+    </div>
+    <div>
+      {% if booking.status == 'Confirmed' %}
+        <span class="badge badge-success" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Status: Confirmed</span>
+      {% elif booking.status == 'Booked' %}
+        <span class="badge badge-info" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Status: Booked</span>
+      {% elif booking.status == 'Waiting for Payment' %}
+        <span class="badge badge-warning" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Status: Waiting for Payment</span>
+      {% elif booking.status == 'Dibatalkan' %}
+        <span class="badge badge-danger" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Status: Dibatalkan</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Kartu Informasi Penerbangan -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Informasi Penerbangan</div>
+      <div class="card-description">{{ booking.penerbangan.nomor_penerbangan }} — {{ booking.penerbangan.maskapai.nama }}</div>
+    </div>
+    <div class="card-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1rem;">
+        <div>
+          <div style="font-size: 0.8rem; color: #64748b;">Keberangkatan</div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">{{ booking.penerbangan.jadwal_keberangkatan.strftime('%H:%M') }}</div>
+          <div style="font-weight: 600;">{{ booking.penerbangan.asal.nama_kota }}</div>
+          <div style="font-size: 0.75rem; color: #64748b;">{{ booking.penerbangan.asal.nama_bandara }} ({{ booking.penerbangan.asal.kode_bandara }})</div>
+          <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">{{ booking.penerbangan.jadwal_keberangkatan | format_date }}</div>
+        </div>
+
+        <div style="text-align: center;">
+          <div style="font-size: 0.75rem; color: #64748b;">Durasi</div>
+          <div style="font-size: 0.85rem; font-weight: 600; color: #0284c7;">{{ booking.penerbangan.durasi_format }}</div>
+          <span style="font-size: 0.7rem; color: #16a34a;">Langsung</span>
+        </div>
+
+        <div style="text-align: right;">
+          <div style="font-size: 0.8rem; color: #64748b;">Kedatangan</div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">{{ booking.penerbangan.jadwal_kedatangan.strftime('%H:%M') }}</div>
+          <div style="font-weight: 600;">{{ booking.penerbangan.tujuan.nama_kota }}</div>
+          <div style="font-size: 0.75rem; color: #64748b;">{{ booking.penerbangan.tujuan.nama_bandara }} ({{ booking.penerbangan.tujuan.kode_bandara }})</div>
+          <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">{{ booking.penerbangan.jadwal_kedatangan | format_date }}</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; padding-top: 0.5rem;">
+        <span style="color: #64748b;">Total Tarif:</span>
+        <span style="font-size: 1.15rem; font-weight: 700; color: #ea580c;">{{ booking.penerbangan.harga_tiket | currency }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kartu Data Penumpang & E-Tiket -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Data Penumpang & Status Tiket</div>
+      <div class="card-description">Rincian identitas dan status penerbitan tiket elektronik.</div>
+    </div>
+    <div class="card-content">
+      {% if booking.penumpang %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem;">
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Nama Penumpang</div>
+            <div style="font-weight: 600; color: #0f172a;">{{ booking.penumpang.nama_lengkap }}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Nomor Identitas ({{ booking.penumpang.tipe_identitas }})</div>
+            <div style="font-weight: 500;">{{ booking.penumpang.nomor_identitas }}</div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <div style="font-size: 0.75rem; color: #64748b;">Email</div>
+              <div style="font-size: 0.85rem;">{{ booking.penumpang.email }}</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: #64748b;">Telepon</div>
+              <div style="font-size: 0.85rem;">{{ booking.penumpang.nomor_telepon }}</div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div style="border-top: 1px dashed var(--border); padding-top: 1rem; margin-bottom: 1.25rem;">
+        <div style="font-size: 0.75rem; color: #64748b;">Status E-Tiket (US-13)</div>
+        {% if booking.e_tiket and booking.e_tiket.status_penerbitan == 'Diterbitkan' %}
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem;">
+            <div>
+              <span class="badge badge-success">Tiket Diterbitkan</span>
+              <div style="font-size: 0.85rem; font-weight: 600; margin-top: 0.25rem;">No: {{ booking.e_tiket.nomor_tiket }}</div>
+            </div>
+            <a href="{{ url_for('main.mailbox') }}" class="btn btn-outline" style="font-size: 0.75rem;">Cek Notifikasi Email</a>
+          </div>
+        {% else %}
+          <div style="margin-top: 0.25rem;">
+            <span class="badge badge-secondary">E-Tiket Belum Diterbitkan</span>
+            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">(E-tiket hanya terbit setelah pemesanan dikonfirmasi / lunas).</div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- US-05: Aksi Pembatalan Pemesanan Tiket -->
+      <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+        {% if booking.status != 'Dibatalkan' %}
+          <form method="POST" action="{{ url_for('flight.cancel_booking_view', booking_id=booking.id) }}" onsubmit="return confirmCancellation(event, '{{ booking.kode_booking_reference }}');">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div style="font-weight: 600; font-size: 0.85rem; color: #0f172a;">Batalkan Pemesanan (US-05)</div>
+                <div style="font-size: 0.75rem; color: #64748b;">Memerlukan konfirmasi dan memenuhi ketentuan pembatalan.</div>
+              </div>
+              <button type="submit" class="btn btn-destructive">Batalkan Pemesanan</button>
+            </div>
+          </form>
+        {% else %}
+          <div class="alert alert-error" style="margin-bottom: 0;">
+            Pemesanan ini telah dibatalkan. Tidak ada tindakan pembatalan lanjutan yang dapat dilakukan.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

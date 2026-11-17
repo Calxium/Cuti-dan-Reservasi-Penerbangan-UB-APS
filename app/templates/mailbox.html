@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Simulated Mailbox — Notifikasi E-Tiket (US-13){% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Simulated Mailbox Lokal</h1>
+  <p style="color: #64748b;">Membuktikan implementasi US-13 AC-03: Pengiriman e-tiket ke email terdaftar tanpa perlu konfigurasi SMTP eksternal.</p>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Daftar Email Keluar (Simulasi Lokal)</div>
+    <div class="card-description">Email otomatis tercatat saat tiket berstatus Diterbitkan.</div>
+  </div>
+  <div class="card-content">
+    {% if emails %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Waktu Kirim</th>
+              <th>Penerima</th>
+              <th>Subjek Email</th>
+              <th>Kode Booking</th>
+              <th>Isi Pesan</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for em in emails %}
+              <tr>
+                <td style="white-space: nowrap; font-size: 0.8rem;">{{ em.sent_at | format_datetime }}</td>
+                <td><strong>{{ em.recipient }}</strong></td>
+                <td>{{ em.subject }}</td>
+                <td><span class="badge badge-info">{{ em.related_booking_code or '-' }}</span></td>
+                <td>
+                  <pre style="font-family: inherit; font-size: 0.8rem; background: #f8fafc; padding: 0.5rem; border-radius: 4px; white-space: pre-wrap;">{{ em.body }}</pre>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+        <p>Belum ada simulasi email yang terkirim.</p>
+        <p style="font-size: 0.8rem; margin-top: 0.5rem;">Email akan otomatis dikirim ketika pemesanan tiket berstatus Confirmed / Diterbitkan.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

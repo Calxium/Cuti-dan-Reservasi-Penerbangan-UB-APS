@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Cari Tiket untuk Pengunjung (US-11) — Manajer Travel{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Pencarian Tiket untuk Pengunjung</h1>
+      <p style="color: #64748b;">US-11: Manajer Travel mencari opsi tiket penerbangan berdasarkan kebutuhan pengunjung.</p>
+    </div>
+    <span class="badge badge-warning">Peran: Manajer Travel</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Kriteria Perjalanan Pengunjung</div>
+    <div class="card-description">Masukkan asal, tujuan, dan tanggal yang diminta oleh pengunjung.</div>
+  </div>
+  <div class="card-content">
+    <form method="GET" action="{{ url_for('flight.visitor_search_view') }}">
+      <div class="grid-3">
+        <div class="form-group">
+          <label class="form-label">Kota Asal Pengunjung *</label>
+          <select name="origin_id" class="form-control" required>
+            <option value="">-- Pilih Asal --</option>
+            {% for loc in locations %}
+              <option value="{{ loc.id }}" {% if loc.id == origin_id %}selected{% endif %}>{{ loc.nama_kota }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kota Tujuan Pengunjung *</label>
+          <select name="dest_id" class="form-control" required>
+            <option value="">-- Pilih Tujuan --</option>
+            {% for loc in locations %}
+              <option value="{{ loc.id }}" {% if loc.id == dest_id %}selected{% endif %}>{{ loc.nama_kota }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tanggal Keberangkatan *</label>
+          <input type="date" name="travel_date" class="form-control" value="{{ travel_date_str }}" required>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary">Cari Penerbangan untuk Pengunjung</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if has_searched and not error_msg %}
+  <div style="margin-bottom: 1rem;">
+    <h2 style="font-size: 1.1rem; font-weight: 600; color: #0f172a;">
+      Opsi Penerbangan yang Dapat Ditawarkan ({{ flights | length }})
+    </h2>
+  </div>
+
+  {% if flights %}
+    {% for f in flights %}
+      <div class="flight-card">
+        <div class="airline-col">
+          <span class="airline-name">{{ f.maskapai.nama }}</span>
+          <span class="flight-number">{{ f.nomor_penerbangan }}</span>
+        </div>
+        <div class="schedule-col">
+          <div class="time-box">
+            <div class="flight-time">{{ f.jadwal_keberangkatan.strftime('%H:%M') }}</div>
+            <div class="airport-code">{{ f.asal.kode_bandara }}</div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <span class="flight-duration">{{ f.durasi_format }}</span>
+            <span style="font-size: 0.7rem; color: #16a34a;">Langsung</span>
+          </div>
+          <div class="time-box">
+            <div class="flight-time">{{ f.jadwal_kedatangan.strftime('%H:%M') }}</div>
+            <div class="airport-code">{{ f.tujuan.kode_bandara }}</div>
+          </div>
+        </div>
+        <div class="price-col">
+          <div class="price-amount">{{ f.harga_tiket | currency }}</div>
+        </div>
+        <div class="action-col">
+          <a href="{{ url_for('flight.visitor_book_view', flight_id=f.id) }}" class="btn btn-primary" style="font-size: 0.8rem;">
+            Pesan atas Nama Pengunjung (US-12)
+          </a>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <!-- US-11 AC-03: Pesan jika tidak ada penerbangan sesuai kriteria -->
+    <div class="card">
+      <div class="card-content" style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+        <p style="font-weight: 600; font-size: 1rem; color: #0f172a;">Tidak ada penerbangan sesuai kriteria permintaan pengunjung.</p>
+        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Silakan sesuaikan tanggal perjalanan atau rute penerbangan.</p>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Filter Pengajuan Cuti (US-01) — Manajemen Cuti{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Filter Pengajuan Cuti Pegawai</h1>
+      <p style="color: #64748b;">US-01: Memfilter pengajuan cuti pegawai berdasarkan irisan rentang tanggal pencarian.</p>
+    </div>
+    <span class="badge badge-info">Peran: Manajer HRD</span>
+  </div>
+</div>
+
+<!-- June Dashboard Pattern: Filter bar di atas tabel pengajuan -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Tentukan Periode Pencarian Cuti</div>
+    <div class="card-description">Sistem akan menyaring seluruh permohonan yang beririsan dengan rentang tanggal ini.</div>
+  </div>
+  <div class="card-content">
+    <form method="GET" action="{{ url_for('leave.filter_leaves_view') }}">
+      <div class="grid-3" style="align-items: flex-end;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Tanggal Awal Periode (Mulai)</label>
+          <input type="date" name="start_date" class="form-control" value="{{ start_date_str }}" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Tanggal Akhir Periode (Selesai)</label>
+          <input type="date" name="end_date" class="form-control" value="{{ end_date_str }}" required>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Terapkan Filter</button>
+          <a href="{{ url_for('leave.filter_leaves_view') }}" class="btn btn-outline">Reset</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tabel Hasil Pengajuan Cuti -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Daftar Pengajuan Cuti</div>
+    <div class="card-description">
+      {% if has_searched and not error_msg %}
+        Menampilkan hasil yang beririsan dengan periode <strong>{{ start_date_str }}</strong> s.d. <strong>{{ end_date_str }}</strong>.
+      {% else %}
+        Menampilkan seluruh pengajuan cuti yang tercatat.
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-content">
+    {% if leaves %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nama Pegawai</th>
+              <th>Jabatan</th>
+              <th>Tanggal Mulai</th>
+              <th>Tanggal Selesai</th>
+              <th>Durasi (Hari)</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in leaves %}
+              <tr>
+                <td>#{{ l.id }}</td>
+                <td>
+                  <strong>{{ l.pegawai.nama }}</strong>
+                  <div style="font-size: 0.75rem; color: #64748b;">NIP: {{ l.pegawai.nip }}</div>
+                </td>
+                <td>{{ l.pegawai.jabatan }}</td>
+                <td>{{ l.tanggal_mulai | format_date }}</td>
+                <td>{{ l.tanggal_selesai | format_date }}</td>
+                <td><span class="badge badge-secondary">{{ l.durasi }} Hari</span></td>
+                <td>
+                  {% if l.status == 'Disetujui' %}
+                    <span class="badge badge-success">Disetujui</span>
+                  {% elif l.status == 'Menunggu' %}
+                    <span class="badge badge-warning">Menunggu</span>
+                  {% elif l.status == 'Ditolak' %}
+                    <span class="badge badge-danger">Ditolak</span>
+                  {% else %}
+                    <span class="badge badge-secondary">{{ l.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('leave.employee_detail_view', pegawai_id=l.pegawai.id) }}" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                    Detail Cuti
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.75rem; color: #94a3b8;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <p style="font-weight: 500; font-size: 1rem;">Tidak ada pengajuan cuti yang sesuai dengan kriteria pencarian.</p>
+        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Coba sesuaikan tanggal awal atau tanggal akhir pencarian.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Pemesanan Tiket Penerbangan (US-04) — APS Portal{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Konfirmasi & Pemesanan Tiket</h1>
+      <p style="color: #64748b;">US-04: Memesan penerbangan pilihan pengguna dan melengkapi data wajib penumpang.</p>
+    </div>
+    <span class="badge badge-secondary">Peran: Calon Penumpang</span>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Ringkasan Detail Penerbangan (AC-01) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Ringkasan Tiket Terpilih</div>
+      <div class="card-description">Periksa kembali detail jadwal dan rute sebelum mengonfirmasi.</div>
+    </div>
+    <div class="card-content">
+      <div style="margin-bottom: 1.25rem;">
+        <div style="font-size: 0.8rem; color: #64748b;">Maskapai & Penerbangan</div>
+        <div style="font-size: 1.1rem; font-weight: 700; color: #0f172a;">{{ flight.maskapai.nama }} ({{ flight.nomor_penerbangan }})</div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1.25rem;">
+        <div>
+          <div style="font-size: 0.8rem; color: #64748b;">Berangkat</div>
+          <div style="font-size: 1.2rem; font-weight: 700; color: #0f172a;">{{ flight.jadwal_keberangkatan.strftime('%H:%M') }}</div>
+          <div style="font-size: 0.85rem; font-weight: 500;">{{ flight.asal.nama_kota }} ({{ flight.asal.kode_bandara }})</div>
+          <div style="font-size: 0.75rem; color: #64748b;">{{ flight.jadwal_keberangkatan | format_date }}</div>
+        </div>
+
+        <div style="text-align: center;">
+          <div style="font-size: 0.75rem; color: #64748b;">Durasi</div>
+          <div style="font-size: 0.85rem; font-weight: 600; color: #0284c7;">{{ flight.durasi_format }}</div>
+          <div style="font-size: 0.7rem; color: #16a34a;">Penerbangan Langsung</div>
+        </div>
+
+        <div style="text-align: right;">
+          <div style="font-size: 0.8rem; color: #64748b;">Tiba</div>
+          <div style="font-size: 1.2rem; font-weight: 700; color: #0f172a;">{{ flight.jadwal_kedatangan.strftime('%H:%M') }}</div>
+          <div style="font-size: 0.85rem; font-weight: 500;">{{ flight.tujuan.nama_kota }} ({{ flight.tujuan.kode_bandara }})</div>
+          <div style="font-size: 0.75rem; color: #64748b;">{{ flight.jadwal_kedatangan | format_date }}</div>
+        </div>
+      </div>
+
+      <div style="border-top: 1px dashed var(--border); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600; color: #334155;">Total Harga Tiket:</span>
+        <span style="font-size: 1.35rem; font-weight: 700; color: #ea580c;">{{ flight.harga_tiket | currency }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Data Penumpang Wajib (AC-02) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Data Penumpang (Wajib)</div>
+      <div class="card-description">Sistem akan menolak jika ada data wajib yang belum terisi.</div>
+    </div>
+    <div class="card-content">
+      <form method="POST" action="{{ url_for('flight.book_flight_view', flight_id=flight.id) }}">
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap Penumpang *</label>
+          <input type="text" name="nama_lengkap" class="form-control" placeholder="Sesuai KTP / Paspor" required>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Tipe Identitas *</label>
+            <select name="tipe_identitas" class="form-control" required>
+              <option value="KTP">KTP (WNI)</option>
+              <option value="Paspor">Paspor (WNA/Internasional)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nomor Identitas (NIK/Paspor) *</label>
+            <input type="text" name="nomor_identitas" class="form-control" placeholder="Contoh: 3578012345670001" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Alamat Email Penerima E-Tiket *</label>
+          <input type="email" name="email" class="form-control" placeholder="email@contoh.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nomor Telepon / WhatsApp *</label>
+          <input type="tel" name="nomor_telepon" class="form-control" placeholder="Contoh: 081234567890" required>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <a href="{{ url_for('flight.search_single_view') }}" class="btn btn-outline">Batal</a>
+          <button type="submit" class="btn btn-primary">Konfirmasi Pemesanan Tiket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

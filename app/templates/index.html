@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Utama — QUIZ 2 APS{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+  <h1 style="font-size: 1.75rem; font-weight: 700; color: #0f172a;">QUIZ 2 APS — Manajemen Cuti & Reservasi Penerbangan</h1>
+  <p style="color: #64748b; margin-top: 0.25rem;">Prototipe sistem terintegrasi yang mencakup 14 User Story (US-01 s.d. US-14).</p>
+</div>
+
+<!-- Metrics Overview -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-label">Total Data Pegawai</div>
+    <div class="metric-value">{{ total_pegawai }}</div>
+    <div class="metric-desc">Modul Manajemen Cuti (US-01 & US-02)</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Jadwal Penerbangan Aktif</div>
+    <div class="metric-value">{{ total_flights }}</div>
+    <div class="metric-desc">Rute domestik Indonesia (US-03, 06, 07, 09, 11)</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Total Pemesanan Tiket</div>
+    <div class="metric-value">{{ total_bookings }}</div>
+    <div class="metric-desc">Confirmed, Booked, Waiting, Dibatalkan</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Peran Aktif Saat Ini</div>
+    <div class="metric-value" style="font-size: 1.3rem; color: #0284c7;">{{ current_role }}</div>
+    <div class="metric-desc">Ubah via role switcher di atas</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Modul Cuti Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Modul 1: Manajemen Cuti Pegawai</div>
+      <div class="card-description">Mendukung US-01 dan US-02 untuk Manajer HRD.</div>
+    </div>
+    <div class="card-content">
+      <p style="font-size: 0.875rem; color: #475569; margin-bottom: 1rem;">
+        Fitur filter pengajuan cuti berbasis irisan rentang tanggal pencarian dan pemantauan ringkasan sisa hak cuti tahunan pegawai.
+      </p>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('leave.filter_leaves_view') }}" class="btn btn-primary">Filter Pengajuan Cuti (US-01)</a>
+        <a href="{{ url_for('leave.employee_list_view') }}" class="btn btn-outline">Riwayat & Kuota Pegawai (US-02)</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modul Penerbangan Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Modul 2: Reservasi Penerbangan</div>
+      <div class="card-description">Mendukung US-03 s.d. US-14 (Penumpang, Member, Manajer).</div>
+    </div>
+    <div class="card-content">
+      <p style="font-size: 0.875rem; color: #475569; margin-bottom: 1rem;">
+        Pencarian 1 tujuan, multi-tujuan alternatif, itinerary multi-destinasi bersambung, komparasi preferensi jam, booking, pembatalan, dan e-tiket.
+      </p>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('flight.search_single_view') }}" class="btn btn-primary">Cari Penerbangan (US-03)</a>
+        <a href="{{ url_for('flight.search_multi_dest_view') }}" class="btn btn-outline">Tujuan Alternatif (US-06)</a>
+        <a href="{{ url_for('flight.itinerary_search_view') }}" class="btn btn-outline">Itinerary Multi-Leg (US-07)</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Petunjuk Cepat Demo untuk Dosen / Penguji -->
+<div class="card" style="margin-top: 1rem;">
+  <div class="card-header">
+    <div class="card-title">Panduan Cepat Evaluasi Demo (US-01 s.d. US-14)</div>
+    <div class="card-description">Gunakan Role Switcher pada bilah atas untuk berpindah persona pengujian:</div>
+  </div>
+  <div class="card-content">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>User Story</th>
+            <th>Peran Aktor</th>
+            <th>Aksi Demo Utama</th>
+            <th>Tautan Menu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>US-01</strong></td>
+            <td><span class="badge badge-info">Manajer HRD</span></td>
+            <td>Filter pengajuan cuti beririsan dengan tanggal pencarian</td>
+            <td><a href="{{ url_for('leave.filter_leaves_view') }}">Filter Cuti</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-02</strong></td>
+            <td><span class="badge badge-info">Manajer HRD</span></td>
+            <td>Pilih pegawai, lihat riwayat tahun berjalan & sisa hak cuti</td>
+            <td><a href="{{ url_for('leave.employee_list_view') }}">Riwayat Pegawai</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-03 & US-04</strong></td>
+            <td><span class="badge badge-secondary">Calon Penumpang</span></td>
+            <td>Cari rute Jakarta - Bali, pesan tiket, isi data wajib penumpang</td>
+            <td><a href="{{ url_for('flight.search_single_view') }}">Cari & Pesan</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-05</strong></td>
+            <td><span class="badge badge-secondary">Penumpang Pemesan</span></td>
+            <td>Batalkan tiket dengan konfirmasi & pengecekan syarat</td>
+            <td><a href="{{ url_for('flight.my_tickets_view') }}">Detail Pemesanan</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-06</strong></td>
+            <td><span class="badge badge-secondary">Calon Penumpang</span></td>
+            <td>Cari ke minimal 2 kota tujuan alternatif sekaligus (cth: Surabaya & Bali)</td>
+            <td><a href="{{ url_for('flight.search_multi_dest_view') }}">Tujuan Alternatif</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-07</strong></td>
+            <td><span class="badge badge-success">Member Frequent Traveller</span></td>
+            <td>Itinerary multi-leg Jakarta -> Surabaya -> Bali, hitung total harga</td>
+            <td><a href="{{ url_for('flight.itinerary_search_view') }}">Itinerary Multi-Leg</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-08</strong></td>
+            <td><span class="badge badge-success">Member Frequent Traveller</span></td>
+            <td>Lengkapi profil wajib & uji validasi tiket</td>
+            <td><a href="{{ url_for('flight.member_profile_view') }}">Profil Member</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-09</strong></td>
+            <td><span class="badge badge-success">Member Frequent Traveller</span></td>
+            <td>Filter jam pagi/siang/malam & bandingkan 2 penerbangan berdampingan</td>
+            <td><a href="{{ url_for('flight.compare_preferences_view') }}">Komparasi Jam</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-10</strong></td>
+            <td><span class="badge badge-warning">Manajer Travel</span></td>
+            <td>Filter seluruh pemesanan (Confirmed, Booked, Waiting for Payment)</td>
+            <td><a href="{{ url_for('flight.manager_bookings_view') }}">Monitoring Booking</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-11 & US-12</strong></td>
+            <td><span class="badge badge-warning">Manajer Travel</span></td>
+            <td>Cari dan pesan tiket atas nama pengunjung dengan tautan akun</td>
+            <td><a href="{{ url_for('flight.visitor_search_view') }}">Pesan Pengunjung</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-13</strong></td>
+            <td><span class="badge badge-primary">Pengunjung</span></td>
+            <td>Akses E-Tiket yang telah diterbitkan dan periksa notifikasi email simulasi</td>
+            <td><a href="{{ url_for('flight.my_tickets_view') }}">E-Tiket Saya</a></td>
+          </tr>
+          <tr>
+            <td><strong>US-14</strong></td>
+            <td><span class="badge badge-warning">Manajer Travel</span></td>
+            <td>Cari pemesanan dengan kode booking reference dan cek wewenang</td>
+            <td><a href="{{ url_for('flight.manager_lookup_view') }}">Lacak Kode Booking</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Pesan Tiket atas Nama Pengunjung (US-12) — Manajer Travel{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Pemesanan Tiket atas Nama Pengunjung</h1>
+      <p style="color: #64748b;">US-12: Menerbitkan tiket penerbangan menggunakan data identitas dan akun pengunjung.</p>
+    </div>
+    <span class="badge badge-warning">Peran: Manajer Travel</span>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Ringkasan Detail Penerbangan (AC-02) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Detail Penerbangan Pilihan Pengunjung</div>
+      <div class="card-description">{{ flight.nomor_penerbangan }} — {{ flight.maskapai.nama }}</div>
+    </div>
+    <div class="card-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1.25rem;">
+        <div>
+          <div style="font-size: 0.8rem; color: #64748b;">Asal</div>
+          <div style="font-size: 1.2rem; font-weight: 700;">{{ flight.jadwal_keberangkatan.strftime('%H:%M') }}</div>
+          <div>{{ flight.asal.nama_kota }} ({{ flight.asal.kode_bandara }})</div>
+          <div style="font-size: 0.75rem; color: #64748b;">{{ flight.jadwal_keberangkatan | format_date }}</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 0.75rem; color: #64748b;">Durasi</div>
+          <div style="color: #0284c7; font-weight: 600;">{{ flight.durasi_format }}</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 0.8rem; color: #64748b;">Tujuan</div>
+          <div style="font-size: 1.2rem; font-weight: 700;">{{ flight.jadwal_kedatangan.strftime('%H:%M') }}</div>
+          <div>{{ flight.tujuan.nama_kota }} ({{ flight.tujuan.kode_bandara }})</div>
+          <div style="font-size: 0.75rem; color: #64748b;">{{ flight.jadwal_kedatangan | format_date }}</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 1px dashed var(--border);">
+        <span style="font-weight: 600;">Tarif yang Dikenakan:</span>
+        <span style="font-size: 1.25rem; font-weight: 700; color: #ea580c;">{{ flight.harga_tiket | currency }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Identitas Pengunjung & Penautan Akun (AC-01, AC-03) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Identitas Pengunjung & Akun</div>
+      <div class="card-description">Kaitkan dengan Akun Pengunjung jika terdaftar (AC-03).</div>
+    </div>
+    <div class="card-content">
+      <form method="POST" action="{{ url_for('flight.visitor_book_view', flight_id=flight.id) }}">
+        <div class="form-group" style="background: #f0f9ff; padding: 0.75rem; border-radius: var(--radius); border: 1px solid #bae6fd;">
+          <label class="form-label" style="color: #0369a1; font-weight: 600;">Pautkan ke Akun Pengunjung Terdaftar (Opsional):</label>
+          <select name="account_id" class="form-control" onchange="autoFillVisitor(this)">
+            <option value="">-- Pengunjung Umum (Tanpa Akun) --</option>
+            {% for v in visitors %}
+              <option value="{{ v.id }}" data-name="{{ v.nama }}" data-email="{{ v.email_terdaftar }}" data-phone="{{ v.nomor_telepon }}">
+                {{ v.nama }} ({{ v.email_terdaftar }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap Pengunjung *</label>
+          <input type="text" id="v_nama" name="nama_lengkap" class="form-control" placeholder="Nama lengkap pengunjung" required>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Tipe Identitas *</label>
+            <select name="tipe_identitas" class="form-control" required>
+              <option value="KTP">KTP</option>
+              <option value="Paspor">Paspor</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nomor Identitas *</label>
+            <input type="text" name="nomor_identitas" class="form-control" placeholder="NIK / No Paspor" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Pengunjung (Untuk E-Tiket) *</label>
+          <input type="email" id="v_email" name="email" class="form-control" placeholder="pengunjung@contoh.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nomor Telepon Pengunjung *</label>
+          <input type="tel" id="v_phone" name="nomor_telepon" class="form-control" placeholder="08xxxxxxxxxx" required>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem;">
+          <a href="{{ url_for('flight.visitor_search_view') }}" class="btn btn-outline">Batal</a>
+          <button type="submit" class="btn btn-primary">Simpan Pemesanan atas Nama Pengunjung</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function autoFillVisitor(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  if (opt.value) {
+    document.getElementById('v_nama').value = opt.getAttribute('data-name') || '';
+    document.getElementById('v_email').value = opt.getAttribute('data-email') || '';
+    document.getElementById('v_phone').value = opt.getAttribute('data-phone') || '';
+  }
+}
+</script>
+{% endblock %}

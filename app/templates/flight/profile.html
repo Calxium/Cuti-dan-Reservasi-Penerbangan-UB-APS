@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Profil Member & Validasi Tiket (US-08) — APS Portal{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Profil Member Frequent Traveller</h1>
+      <p style="color: #64748b;">US-08: Melengkapi data profil wajib untuk pemeriksaan identitas tiket penumpang.</p>
+    </div>
+    <span class="badge badge-success">Peran: Member Frequent Traveller</span>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Form Profil Member -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Data Profil Member ({{ member.member_code }})</div>
+      <div class="card-description">Lengkapi bidang bertanda * untuk mengizinkan pemeriksaan tiket.</div>
+    </div>
+    <div class="card-content">
+      <form method="POST" action="{{ url_for('flight.member_profile_view') }}">
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap *</label>
+          <input type="text" name="nama_lengkap" class="form-control" value="{{ member.nama_lengkap or '' }}" placeholder="Nama sesuai identitas resmi">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nomor Identitas (NIK / Paspor) *</label>
+          <input type="text" name="nomor_identitas" class="form-control" value="{{ member.nomor_identitas or '' }}" placeholder="Nomor resmi identitas">
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Tanggal Lahir *</label>
+            <input type="date" name="tanggal_lahir" class="form-control" value="{{ member.tanggal_lahir.strftime('%Y-%m-%d') if member.tanggal_lahir else '' }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Kewarganegaraan *</label>
+            <input type="text" name="kewarganegaraan" class="form-control" value="{{ member.kewarganegaraan or '' }}" placeholder="Contoh: Indonesia">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nomor Telepon *</label>
+          <input type="tel" name="nomor_telepon" class="form-control" value="{{ member.nomor_telepon or '' }}" placeholder="Nomor kontak aktif">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Alamat Domisili</label>
+          <input type="text" name="alamat" class="form-control" value="{{ member.alamat or '' }}" placeholder="Alamat tempat tinggal">
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
+          <button type="submit" name="action" value="save" class="btn btn-outline">Simpan Perubahan</button>
+          <button type="submit" name="action" value="validate_ticket" class="btn btn-primary">Uji Validasi Identitas Tiket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Status Kelengkapan & Hasil Validasi (AC-02, AC-03, AC-04) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Status Kelengkapan Identitas Tiket</div>
+      <div class="card-description">Mekanisme verifikasi sebelum izin pemeriksaan tiket diberikan.</div>
+    </div>
+    <div class="card-content">
+      <div style="margin-bottom: 1.5rem;">
+        <div style="font-size: 0.85rem; color: #64748b;">Status Kelengkapan Saat Ini:</div>
+        {% if is_complete %}
+          <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="badge badge-success" style="font-size: 0.9rem; padding: 0.35rem 0.75rem;">Lengkap (Memenuhi Syarat)</span>
+          </div>
+        {% else %}
+          <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="badge badge-danger" style="font-size: 0.9rem; padding: 0.35rem 0.75rem;">Belum Lengkap</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Detail Bidang Belum Terisi (AC-02, AC-04) -->
+      {% if missing_fields %}
+        <div class="alert alert-error">
+          <strong>Data profil tidak lengkap.</strong>
+          <p style="font-size: 0.8rem; margin-top: 0.25rem;">Bidang wajib berikut harus dilengkapi terlebih dahulu:</p>
+          <ul style="margin-top: 0.5rem; padding-left: 1.25rem; font-size: 0.8rem;">
+            {% for f in missing_fields %}
+              <li>{{ f }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <!-- Hasil Validasi Tiket (AC-03) -->
+      {% if validation_status == 'ALLOWED' %}
+        <div class="alert alert-success">
+          <strong>Pemeriksaan Tiket Diizinkan:</strong>
+          <p style="font-size: 0.825rem; margin-top: 0.35rem;">
+            Seluruh data profil wajib lengkap. Proses pemeriksaan tiket penumpang dapat dilanjutkan.
+          </p>
+          <div style="margin-top: 0.5rem; padding: 0.5rem; background: #ffffff; border-radius: 4px; font-size: 0.75rem; color: #334155; border: 1px solid #a7f3d0;">
+            <em>Pemberitahuan Sistem (AC-03):</em> Kelengkapan profil member mengizinkan pemeriksaan dilanjutkan, namun tidak otomatis berarti tiket langsung dinyatakan valid tanpa validasi operasional maskapai.
+          </div>
+        </div>
+      {% elif validation_status == 'REJECTED' %}
+        <div class="alert alert-warning">
+          <strong>Pemeriksaan Ditolak (AC-04):</strong>
+          <p style="font-size: 0.825rem; margin-top: 0.25rem;">
+            Sistem tidak melanjutkan proses validasi karena masih terdapat data wajib yang kosong.
+          </p>
+        </div>
+      {% else %}
+        <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border); font-size: 0.825rem; color: #64748b;">
+          Tekan tombol <strong>"Uji Validasi Identitas Tiket"</strong> untuk menguji alur verifikasi data profil sesuai AC-03 & AC-04.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

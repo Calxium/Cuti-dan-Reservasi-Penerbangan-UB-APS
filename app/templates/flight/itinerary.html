@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Itinerary Multi-Destinasi (US-07) — Reservasi Penerbangan{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h1 style="font-size: 1.5rem; font-weight: 700; color: #0f172a;">Itinerary Penerbangan Multi-Destinasi</h1>
+      <p style="color: #64748b;">US-07: Mencari kombinasi rute bersambung minimal dua segmen dengan validasi keterhubungan rute dan urutan tanggal.</p>
+    </div>
+    <span class="badge badge-success">Peran: Member Frequent Traveller</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Susun Segmen Perjalanan (Minimal 2 Segmen)</div>
+    <div class="card-description">Perhatikan: Kota tujuan segmen N harus sama dengan kota asal segmen N+1, dan tanggal tidak boleh mundur.</div>
+  </div>
+  <div class="card-content">
+    <form method="POST" action="{{ url_for('flight.itinerary_search_view') }}" id="itinerary-form">
+      <div id="itinerary-segments-container">
+        <!-- Segmen 1 -->
+        <div class="segment-row" style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <strong class="segment-number" style="font-size: 0.9rem; color: #0284c7;">Segmen 1</strong>
+          </div>
+          <div class="grid-3">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Kota Asal Segmen 1</label>
+              <select name="segment_origin_id" class="form-control" required>
+                <option value="">-- Pilih Kota Asal --</option>
+                {% for loc in locations %}
+                  <option value="{{ loc.id }}">{{ loc.nama_kota }} ({{ loc.kode_bandara }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Kota Tujuan Segmen 1</label>
+              <select name="segment_dest_id" class="form-control" required>
+                <option value="">-- Pilih Kota Tujuan --</option>
+                {% for loc in locations %}
+                  <option value="{{ loc.id }}">{{ loc.nama_kota }} ({{ loc.kode_bandara }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Tanggal Perjalanan Segmen 1</label>
+              <input type="date" name="segment_date" class="form-control" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segmen 2 -->
+        <div class="segment-row" style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <strong class="segment-number" style="font-size: 0.9rem; color: #0284c7;">Segmen 2</strong>
+            <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;" onclick="removeItinerarySegment(this)">Hapus Segmen</button>
+          </div>
+          <div class="grid-3">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Kota Asal Segmen 2 (Harus Tujuan Segmen 1)</label>
+              <select name="segment_origin_id" class="form-control" required>
+                <option value="">-- Pilih Kota Asal --</option>
+                {% for loc in locations %}
+                  <option value="{{ loc.id }}">{{ loc.nama_kota }} ({{ loc.kode_bandara }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Kota Tujuan Segmen 2</label>
+              <select name="segment_dest_id" class="form-control" required>
+                <option value="">-- Pilih Kota Tujuan --</option>
+                {% for loc in locations %}
+                  <option value="{{ loc.id }}">{{ loc.nama_kota }} ({{ loc.kode_bandara }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Tanggal Perjalanan Segmen 2</label>
+              <input type="date" name="segment_date" class="form-control" required>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+        <button type="button" class="btn btn-outline" onclick="addItinerarySegment()">+ Tambah Segmen Perjalanan</button>
+        <button type="submit" class="btn btn-primary">Cari Kombinasi Itinerary</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Template tersembunyi untuk penambahan segmen dinamis via JS -->
+<template id="segment-template">
+  <div class="segment-row" style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+      <strong class="segment-number" style="font-size: 0.9rem; color: #0284c7;">Segmen</strong>
+      <button type="button" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;" onclick="removeItinerarySegment(this)">Hapus Segmen</button>
+    </div>
+    <div class="grid-3">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Kota Asal Segmen</label>
+        <select name="segment_origin_id" class="form-control" required>
+          <option value="">-- Pilih Kota Asal --</option>
+          {% for loc in locations %}
+            <option value="{{ loc.id }}">{{ loc.nama_kota }} ({{ loc.kode_bandara }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Kota Tujuan Segmen</label>
+        <select name="segment_dest_id" class="form-control" required>
+          <option value="">-- Pilih Kota Tujuan --</option>
+          {% for loc in locations %}
+            <option value="{{ loc.id }}">{{ loc.nama_kota }} ({{ loc.kode_bandara }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Tanggal Perjalanan</label>
+        <input type="date" name="segment_date" class="form-control" required>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- Hasil Pencarian Itinerary (AC-03, AC-04, AC-05) -->
+{% if has_searched and not error_msg %}
+  <div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">
+        Pilihan Kombinasi Itinerary ({{ itineraries | length }} Pilihan Ditemukan)
+      </h2>
+      <p style="font-size: 0.85rem; color: #64748b;">US-07 AC-04: Diurutkan berdasarkan harga total termurah.</p>
+    </div>
+  </div>
+
+  {% if itineraries %}
+    {% for it in itineraries %}
+      <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid #0284c7;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; background: #ffffff;">
+          <div>
+            <div class="card-title" style="font-size: 1rem;">Opsi Itinerary #{{ loop.index }} ({{ it.num_legs }} Segmen)</div>
+            <div class="card-description">Total Waktu Terbang: {{ it.total_duration_minutes // 60 }}j {{ it.total_duration_minutes % 60 }}m</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 0.8rem; color: #64748b;">Harga Total Keseluruhan:</div>
+            <div style="font-size: 1.35rem; font-weight: 700; color: #ea580c;">{{ it.total_price | currency }}</div>
+          </div>
+        </div>
+        <div class="card-content" style="padding: 1rem 1.5rem;">
+          {% for leg in it.legs %}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px dashed var(--border);">
+              <div>
+                <span class="badge badge-secondary" style="font-size: 0.75rem; margin-right: 0.5rem;">Segmen {{ loop.index }}</span>
+                <strong>{{ leg.maskapai.nama }}</strong> ({{ leg.nomor_penerbangan }})
+              </div>
+              <div style="display: flex; gap: 1.5rem; font-size: 0.875rem;">
+                <div>
+                  <strong>{{ leg.jadwal_keberangkatan.strftime('%H:%M') }}</strong> ({{ leg.asal.kode_bandara }})
+                  <div style="font-size: 0.75rem; color: #64748b;">{{ leg.jadwal_keberangkatan | format_date }}</div>
+                </div>
+                <div style="color: #0284c7; font-weight: 500;">➔ {{ leg.durasi_format }} ➔</div>
+                <div>
+                  <strong>{{ leg.jadwal_kedatangan.strftime('%H:%M') }}</strong> ({{ leg.tujuan.kode_bandara }})
+                  <div style="font-size: 0.75rem; color: #64748b;">{{ leg.jadwal_kedatangan | format_date }}</div>
+                </div>
+              </div>
+              <div style="font-weight: 600; color: #334155;">
+                {{ leg.harga_tiket | currency }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <!-- US-07 AC-05: Pesan jika tidak ada itinerary yang sesuai -->
+    <div class="card">
+      <div class="card-content" style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 0.75rem; color: #94a3b8;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <p style="font-weight: 600; font-size: 1.05rem; color: #0f172a;">Tidak ada itinerary yang sesuai.</p>
+        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Tidak ditemukan kombinasi penerbangan yang memenuhi seluruh segmen rute dan jadwal yang diminta.</p>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}
