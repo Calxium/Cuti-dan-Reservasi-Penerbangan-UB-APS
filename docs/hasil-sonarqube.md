@@ -9,7 +9,7 @@ Dokumen ini mencatat hasil pemindaian kualitas kode aktual (*static code analysi
 - **Project Key:** `Calxium_Cuti-dan-Reservasi-Penerbangan-UB-APS`
 - **Project Name:** `Cuti-dan-Reservasi-Penerbangan-UB-APS`
 - **Instance URL:** [http://localhost:9000/dashboard?id=Calxium_Cuti-dan-Reservasi-Penerbangan-UB-APS](http://localhost:9000/dashboard?id=Calxium_Cuti-dan-Reservasi-Penerbangan-UB-APS)
-- **Commit Base Dipindai:** `70a5c38904850be0093bfcf4dfed0060f86e1bda`
+- **Commit Base Dipindai:** `a7fafbf24f20d3bdb8737a0a8d2890f7acf9e85b` (dan base `70a5c38`)
 - **Bahasa & Runtime:** Python 3.12, Flask 3.0.3, SQLAlchemy 2.0.48, Pytest 9.2.0
 
 ---
