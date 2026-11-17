@@ -28,60 +28,49 @@
       <div class="nav-section-title">Manajemen Cuti</div>
       <a href="{{ url_for('leave.filter_leaves_view') }}" class="nav-item">
         <span>Filter Pengajuan Cuti</span>
-        <span class="badge-us">US-01</span>
       </a>
       <a href="{{ url_for('leave.employee_list_view') }}" class="nav-item">
         <span>Riwayat & Kuota Pegawai</span>
-        <span class="badge-us">US-02</span>
       </a>
 
       <!-- Modul 2: Reservasi Penerbangan -->
       <div class="nav-section-title">Reservasi Penerbangan</div>
       <a href="{{ url_for('flight.search_single_view') }}" class="nav-item">
         <span>Cari 1 Tujuan & Pesan</span>
-        <span class="badge-us">US-03/04</span>
       </a>
       <a href="{{ url_for('flight.search_multi_dest_view') }}" class="nav-item">
         <span>Cari Multi-Tujuan Alternatif</span>
-        <span class="badge-us">US-06</span>
       </a>
       <a href="{{ url_for('flight.itinerary_search_view') }}" class="nav-item">
         <span>Itinerary Multi-Destinasi</span>
-        <span class="badge-us">US-07</span>
       </a>
       <a href="{{ url_for('flight.member_profile_view') }}" class="nav-item">
         <span>Profil Member & Validasi</span>
-        <span class="badge-us">US-08</span>
       </a>
       <a href="{{ url_for('flight.compare_preferences_view') }}" class="nav-item">
         <span>Komparasi Preferensi</span>
-        <span class="badge-us">US-09</span>
       </a>
 
       <!-- Travel Manager -->
       <div class="nav-section-title">Travel Manager & Agen</div>
       <a href="{{ url_for('flight.manager_bookings_view') }}" class="nav-item">
         <span>Monitoring Seluruh Booking</span>
-        <span class="badge-us">US-10</span>
       </a>
       <a href="{{ url_for('flight.visitor_search_view') }}" class="nav-item">
         <span>Pesan Tiket Pengunjung</span>
-        <span class="badge-us">US-11/12</span>
       </a>
       <a href="{{ url_for('flight.manager_lookup_view') }}" class="nav-item">
         <span>Lacak Kode Booking</span>
-        <span class="badge-us">US-14</span>
       </a>
 
       <!-- Akun Pengunjung & Tiket -->
       <div class="nav-section-title">Penumpang & E-Tiket</div>
       <a href="{{ url_for('flight.my_tickets_view') }}" class="nav-item">
         <span>E-Tiket Saya</span>
-        <span class="badge-us">US-13</span>
       </a>
       <a href="{{ url_for('main.mailbox') }}" class="nav-item">
         <span>Simulated Mailbox</span>
-        <span class="badge-us">{{ unread_emails_count }}</span>
+        <span class="badge badge-secondary" style="font-size: 0.7rem; margin-left: auto;">{{ unread_emails_count }}</span>
       </a>
     </nav>
   </aside>
